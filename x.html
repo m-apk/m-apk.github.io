@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muzans Developer - Link Shopee</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <script src="https://xurel.github.io/js/faker.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+        }
+
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg-color); 
+            display: flex; flex-direction: column; align-items: center;
+            color: var(--text-main);
+            padding: 20px 10px;
+        }
+
+        /* --- MAIN CONTAINER --- */
+        .main-container {
+            width: 100%; max-width: 480px;
+            background: transparent;
+            display: flex; flex-direction: column;
+        }
+
+        .header-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        .section-title {
+            text-align: center; color: var(--text-main); 
+            font-size: 1.25em; font-weight: 700; letter-spacing: 0.5px;
+            margin-bottom: 20px;
+        }
+
+        /* --- GENERATOR SECTION --- */
+        .input-generator {
+            width: 100%; padding: 14px 16px;
+            border: 1px solid var(--border-color); border-radius: 10px;
+            text-align: center; outline: none; font-size: 0.9em;
+            color: var(--text-main); font-weight: 500; background: #f9fafb;
+            margin-bottom: 12px; transition: border-color 0.2s ease;
+        }
+        .input-generator:focus { border-color: var(--primary); }
+
+        .btn-acak {
+            width: 100%; background: var(--primary); color: white; 
+            border: none; padding: 14px; border-radius: 10px; 
+            font-size: 1em; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+        }
+        .btn-acak:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-acak:active { transform: translateY(1px); }
+
+        /* --- MENU CARDS --- */
+        .menu-list { 
+            display: flex; flex-direction: column; gap: 12px; 
+        }
+        
+        .menu-wrapper { position: relative; width: 100%; }
+
+        .menu-item {
+            display: flex; width: 100%; min-height: 72px;
+            background: var(--card-bg);
+            border-radius: 12px; overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.2s ease;
+        }
+        .menu-item:hover { 
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05); 
+            border-color: #d1d5db;
+        }
+
+        .menu-copy {
+            width: 65px; flex-shrink: 0;
+            background: #f9fafb;
+            border-right: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); font-size: 1.2em; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .menu-copy:hover { background: #f3f4f6; color: var(--primary); }
+        .menu-copy:active { background: #e5e7eb; }
+
+        .menu-content {
+            flex-grow: 1; padding: 12px 16px;
+            display: flex; flex-direction: column; justify-content: center;
+            text-decoration: none; color: var(--text-main); cursor: pointer; gap: 4px;
+        }
+
+        .menu-title { font-weight: 600; font-size: 0.95em; line-height: 1.3; }
+        
+        .badge-container { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 2px;}
+        
+        .badge {
+            font-size: 0.7em; font-weight: 600; background: #f3f4f6; color: var(--text-muted);
+            padding: 4px 8px; border-radius: 6px; letter-spacing: 0.3px;
+        }
+        
+        .badge-new { 
+            position: absolute; top: -6px; right: -6px; 
+            background: #ef4444; color: white; font-size: 0.65em; 
+            padding: 3px 8px; border-radius: 10px; font-weight: 700; 
+            border: 2px solid var(--bg-color); z-index: 2; letter-spacing: 0.5px;
+        }
+
+        .locked-item {
+            background: #111827;
+            border-color: #1f2937;
+        }
+        .locked-item .menu-copy {
+            background: #1f2937; border-right-color: #374151; color: #fbbf24;
+        }
+        .locked-item .menu-copy:hover { background: #374151; }
+        .locked-item .menu-content { color: white; }
+        .locked-item .menu-title i { opacity: 0.7; font-size: 0.9em; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .menu-wrapper { animation: fadeIn 0.3s ease forwards; }
+
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        
+        <div class="header-section">
+            <div class="section-title">LINK SHOPEE</div>
+            <input type="text" id="generatedDataOutput" class="input-generator" placeholder="Data akan muncul di sini..." readonly>
+            <button id="btn-generate" class="btn-acak" onclick="generateAndCopyData()">
+                <i class="fa-solid fa-shuffle"></i> Acak Data
+            </button>
+        </div>
+
+        <div id="menu-container" class="menu-list"></div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // FUNGSI COPY SENYAP UMUM
+        // ==========================================
+        async function copyToClipboard(text) {
+            if (!text) return;
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    throw new Error("Fallback");
+                }
+            } catch (err) {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+            }
+        }
+
+        // ==========================================
+        // KONFIGURASI FIREBASE (Proyek: jeff-link)
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC7KMPorNrZ4FzsYmQA1pMQh-X6f3YFPuI",
+            authDomain: "jeff-link.firebaseapp.com",
+            databaseURL: "https://jeff-link-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "jeff-link",
+            storageBucket: "jeff-link.firebasestorage.app",
+            // Anda bisa menambahkan messagingSenderId & appId jika diperlukan dari console Firebase
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // ==========================================
+        // LOGIKA ACAK PROFIL & AUTO-CLEANUP (WIB)
+        // ==========================================
+        let firebaseUsedNames = [];
+        const wibDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Jakarta"}));
+        const todayWIB = `${wibDate.getFullYear()}-${String(wibDate.getMonth() + 1).padStart(2, '0')}-${String(wibDate.getDate()).padStart(2, '0')}`;
+
+        db.ref('muis/used_names').once('value', (snap) => {
+            if (snap.exists()) {
+                snap.forEach((childSnap) => {
+                    if (childSnap.key !== todayWIB) {
+                        db.ref('muis/used_names/' + childSnap.key).remove();
+                    }
+                });
+            }
+        });
+
+        db.ref('muis/used_names/' + todayWIB).on('value', (snap) => {
+            firebaseUsedNames = snap.val() ? Object.values(snap.val()) : [];
+        });
+
+        async function generateAndCopyData() {
+            try {
+                if(!window.faker) {
+                    alert("Sistem pengacak sedang dimuat, harap tunggu beberapa detik.");
+                    return;
+                }
+                window.faker.locale = "id_ID";
+
+                let nama = ""; let batasMaksimal = 0; 
+                do {
+                    nama = window.faker.name.findName();
+                    batasMaksimal++;
+                } while (firebaseUsedNames.includes(nama) && batasMaksimal < 150);
+
+                db.ref('muis/used_names/' + todayWIB).push(nama);
+
+                const prefixProvider = ['0811', '0812', '0813', '0821', '0822', '0852', '0815', '0816', '0857', '0858', '0817', '0818', '0819', '0859', '0877', '0878', '0895', '0896', '0897', '0898', '0881', '0882', '0887', '0888'];
+                const prefix = prefixProvider[Math.floor(Math.random() * prefixProvider.length)];
+                const noHp = prefix + Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+                
+                const daerah = [
+                    { prov: "DKI JAKARTA", zip: "1", weight: 30, kota: ["JAKARTA SELATAN", "JAKARTA PUSAT", "JAKARTA BARAT", "JAKARTA TIMUR"] },
+                    { prov: "JAWA BARAT", zip: "4", weight: 35, kota: ["BANDUNG", "BOGOR", "BEKASI", "DEPOK", "CIREBON", "GARUT"] },
+                    { prov: "JAWA TENGAH", zip: "5", weight: 30, kota: ["SEMARANG", "SURAKARTA", "MAGELANG", "CILACAP", "KUDUS"] },
+                    { prov: "JAWA TIMUR", zip: "6", weight: 35, kota: ["SURABAYA", "MALANG", "SIDOARJO", "GRESIK", "JEMBER"] },
+                    { prov: "BALI", zip: "8", weight: 15, kota: ["DENPASAR", "BADUNG", "GIANYAR"] },
+                    { prov: "SUMATERA UTARA", zip: "2", weight: 15, kota: ["MEDAN", "BINJAI", "DELI SERDANG"] },
+                    { prov: "SULAWESI SELATAN", zip: "9", weight: 12, kota: ["MAKASSAR", "GOWA", "MAROS"] }
+                ];
+
+                let totalWeight = daerah.reduce((sum, item) => sum + item.weight, 0);
+                let randomNum = Math.random() * totalWeight;
+                let pilihDaerah = daerah[0];
+                for (let d of daerah) {
+                    if (randomNum < d.weight) { pilihDaerah = d; break; }
+                    randomNum -= d.weight;
+                }
+
+                const kota = pilihDaerah.kota[Math.floor(Math.random() * pilihDaerah.kota.length)];
+                const kodePos = `${pilihDaerah.zip}${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+                
+                const jalanList = ["JL. JENDERAL SUDIRMAN", "JL. GATOT SUBROTO", "JL. AHMAD YANI", "JL. MERDEKA", "JL. DIPONEGORO", "JL. PAHLAWAN", "JL. MELATI", "JL. ANGGREK", "JL. NUSA INDAH"];
+                const jalan = `${jalanList[Math.floor(Math.random() * jalanList.length)]} NO. ${Math.floor(Math.random() * 200) + 1}`;
+                
+                const patokanList = ["Samping Masjid", "Depan Indomaret", "Sebelah SD", "Belakang Pasar", "Samping Apotek", "Pas Tikungan", "Rumah Pagar Hitam"];
+                const patokan = patokanList[Math.floor(Math.random() * patokanList.length)].toUpperCase();
+
+                const hasilLengkap = `${nama}, ${noHp}, ${pilihDaerah.prov}, ${kota}, ${kodePos}, ${jalan} (${patokan})`;
+                
+                const outputEl = document.getElementById('generatedDataOutput');
+                outputEl.value = hasilLengkap;
+                await copyToClipboard(hasilLengkap);
+
+                const btn = document.getElementById('btn-generate');
+                const originalHTML = '<i class="fa-solid fa-shuffle"></i> Acak Data';
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
+                btn.style.background = 'var(--success)';
+                btn.style.boxShadow = '0 4px 6px rgba(16, 185, 129, 0.2)';
+                
+                setTimeout(() => { 
+                    btn.innerHTML = originalHTML; 
+                    btn.style.background = '';
+                    btn.style.boxShadow = '';
+                }, 1500);
+
+            } catch (err) { console.error(err); }
+        }
+
+        // ==========================================
+        // RENDER KARTU MENU DARI FIREBASE
+        // ==========================================
+        let globalRandomUrls = ""; 
+
+        async function copyCardUrl(url, element) {
+            await copyToClipboard(url);
+            const icon = element.querySelector('i');
+            icon.className = 'fa-solid fa-check';
+            icon.style.color = 'var(--success)';
+            setTimeout(() => { 
+                icon.className = 'fa-regular fa-copy'; 
+                icon.style.color = '';
+            }, 1000);
+        }
+
+        function actionRandomLink(event, action, element) {
+            event.preventDefault(); event.stopPropagation();
+            
+            if (!globalRandomUrls) return;
+
+            let links = globalRandomUrls.split('\n').map(l => l.trim()).filter(l => l.startsWith('http'));
+
+            if (links.length === 0) {
+                alert("Belum ada link valid yang disetting oleh Admin.");
+                return;
+            }
+
+            let randomLink = links[Math.floor(Math.random() * links.length)];
+
+            if (action === 'copy' && element) {
+                copyToClipboard(randomLink).then(() => {
+                    const icon = element.querySelector('i');
+                    const originalClass = icon.className;
+                    const originalColor = icon.style.color;
+                    
+                    icon.className = 'fa-solid fa-check';
+                    icon.style.color = '#2ecc71';
+                    
+                    setTimeout(() => { 
+                        icon.className = originalClass; 
+                        icon.style.color = originalColor;
+                    }, 1500);
+                });
+            } else if (action === 'open') {
+                window.open(randomLink, '_blank');
+            }
+        }
+
+        db.ref('muis/linkshopee').on('value', (snap) => {
+            const menuDataCache = snap.val() || {};
+            const container = document.getElementById('menu-container');
+            container.innerHTML = "";
+            
+            const colors = ['#ff6b6b', '#54a0ff', '#5f27cd', '#ff9f43', '#2ecc71', '#00d2d3'];
+
+            // --- 1. RENDER KARTU ACAK (TERKUNCI) ---
+            let randomCardData = menuDataCache['ID_RANDOM_LOCKED'];
+            if (randomCardData) {
+                globalRandomUrls = randomCardData.url;
+
+                const wrapRandom = document.createElement('div');
+                wrapRandom.className = 'menu-wrapper';
+                
+                wrapRandom.innerHTML = `
+                    <div class="menu-item locked-item">
+                        <div class="menu-copy" onclick="actionRandomLink(event, 'copy', this)" title="Salin 1 Link Acak">
+                            <i class="fa-solid fa-copy"></i>
+                        </div>
+                        <div class="menu-content" onclick="actionRandomLink(event, 'open', this)" title="Buka 1 Link Acak">
+                            <span class="menu-title" style="color: #fbbf24;">
+                                <i class="fa-solid fa-lock" style="margin-right:6px;"></i> ${randomCardData.title}
+                            </span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(wrapRandom);
+            }
+
+            // --- 2. RENDER KARTU REGULER ---
+            const keys = Object.keys(menuDataCache).filter(k => k !== 'ID_RANDOM_LOCKED').reverse();
+
+            keys.forEach((key, index) => {
+                const data = menuDataCache[key];
+                const itemDate = data.createdAt ? new Date(data.createdAt) : new Date();
+                const isNew = Math.ceil(Math.abs(new Date() - itemDate) / (1000 * 60 * 60 * 24)) <= 7;
+                
+                let statusLabel = data.status ? String(data.status).toUpperCase() : "";
+                const accentColor = colors[index % colors.length];
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'menu-wrapper';
+                wrapper.style.animationDelay = `${index * 0.05}s`;
+                wrapper.style.opacity = "0"; 
+                
+                wrapper.innerHTML = `
+                    ${isNew ? '<div class="badge-new">NEW</div>' : ''}
+                    <div class="menu-item" style="border-left: 4px solid ${accentColor};">
+                        
+                        <div class="menu-copy" onclick="copyCardUrl('${data.url}', this)">
+                            <i class="fa-regular fa-copy"></i>
+                        </div>
+                        
+                        <a href="${data.url}" target="_blank" class="menu-content">
+                            <span class="menu-title">${data.title}</span>
+                            ${(statusLabel || data.price) ? `
+                            <div class="badge-container">
+                                ${statusLabel ? `<span class="badge" style="color:${accentColor}; background-color:${accentColor}1A;">${statusLabel}</span>` : ''}
+                                ${data.price ? `<span class="badge">${data.price}</span>` : ''}
+                            </div>` : ''}
+                        </a>
+
+                    </div>
+                `;
+                container.appendChild(wrapper);
+            });
+        });
+    </script>
+</body>
+</html>
