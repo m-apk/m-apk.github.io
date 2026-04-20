@@ -32,7 +32,7 @@
             display: flex; flex-direction: column; align-items: center;
             color: var(--text-main);
             padding-top: calc(var(--navbar-height) + 20px);
-            padding-bottom: 40px;
+            padding-bottom: 90px; /* Jarak ekstra untuk FAB */
         }
 
         /* --- TOOLBAR / NAVBAR --- */
@@ -46,8 +46,18 @@
         .nav-brand { font-weight: 700; font-size: 1.2em; color: var(--primary); }
         .btn-nav { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-size: 0.9em; }
         .btn-login { background: var(--primary); color: white; }
-        .btn-add { background: #1f2937; color: white; display: none; }
         .btn-logout { background: transparent; color: #ef4444; border: 1px solid #ef4444; display: none; }
+
+        /* --- FLOATING ACTION BUTTON (FAB) --- */
+        .fab-add {
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            background: #1f2937; color: white; border-radius: 50%; border: none;
+            display: none; justify-content: center; align-items: center;
+            font-size: 24px; box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+            cursor: pointer; z-index: 99; transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .fab-add:hover { transform: scale(1.08); background: #111827; }
+        .fab-add:active { transform: scale(0.95); }
 
         /* --- MAIN CONTAINER --- */
         .main-container { width: 100%; max-width: 480px; padding: 0 10px; }
@@ -73,6 +83,11 @@
         .form-control { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; font-family: inherit;}
         .form-control:focus { border-color: var(--primary); }
         .btn-submit { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px;}
+
+        /* Checkbox Custom */
+        .checkbox-container { display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer; }
+        .checkbox-container input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+        .checkbox-container span { font-size: 0.85em; font-weight: 500; color: var(--text-main); }
     </style>
 </head>
 <body>
@@ -82,15 +97,14 @@
         <button id="nav-login-btn" class="btn-nav btn-login" onclick="document.getElementById('modal-login').classList.add('active')">
             <i class="fa-solid fa-user-lock"></i> Login
         </button>
-        <div style="display: flex; gap: 8px;">
-            <button id="nav-add-btn" class="btn-nav btn-add" onclick="openShopeeModal()">
-                <i class="fa-solid fa-plus"></i> Tambah Link
-            </button>
-            <button id="nav-logout-btn" class="btn-nav btn-logout" onclick="logoutAdmin()">
-                <i class="fa-solid fa-right-from-bracket"></i>
-            </button>
-        </div>
+        <button id="nav-logout-btn" class="btn-nav btn-logout" onclick="logoutAdmin()">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
     </nav>
+
+    <button id="fab-add-btn" class="fab-add" onclick="openShopeeModal()" title="Tambah Link">
+        <i class="fa-solid fa-plus"></i>
+    </button>
 
     <div class="main-container">
         <div class="header-section">
@@ -110,8 +124,14 @@
                 <div class="modal-title">Admin Login</div>
                 <button class="btn-close" onclick="closeModal('modal-login')"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="form-group"><label>Email</label><input type="email" id="loginEmail" class="form-control"></div>
-            <div class="form-group"><label>Password</label><input type="password" id="loginPassword" class="form-control"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="loginEmail" class="form-control" placeholder="admin@email.com"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="loginPassword" class="form-control" placeholder="••••••••"></div>
+            
+            <label class="checkbox-container">
+                <input type="checkbox" id="rememberMe" checked>
+                <span>Ingat Saya (Remember Me)</span>
+            </label>
+
             <button class="btn-submit" onclick="loginAdmin()">Masuk</button>
         </div>
     </div>
@@ -168,12 +188,8 @@
         
         function showModal(title, message, type) {
             return new Promise((resolve) => {
-                if(type === 'danger') {
-                    resolve(confirm(title + "\n\n" + message));
-                } else {
-                    alert(title + "\n\n" + message);
-                    resolve(true);
-                }
+                if(type === 'danger') resolve(confirm(title + "\n\n" + message));
+                else { alert(title + "\n\n" + message); resolve(true); }
             });
         }
 
@@ -183,28 +199,37 @@
         auth.onAuthStateChanged((user) => {
             const loginBtn = document.getElementById('nav-login-btn');
             const logoutBtn = document.getElementById('nav-logout-btn');
-            const addBtn = document.getElementById('nav-add-btn');
+            const fabBtn = document.getElementById('fab-add-btn');
             
             if (user) {
                 loginBtn.style.display = 'none';
                 logoutBtn.style.display = 'flex';
-                addBtn.style.display = 'flex';
+                fabBtn.style.display = 'flex'; // Munculkan tombol melayang
                 closeModal('modal-login');
             } else {
                 loginBtn.style.display = 'flex';
                 logoutBtn.style.display = 'none';
-                addBtn.style.display = 'none';
+                fabBtn.style.display = 'none';
             }
             
-            // Trigger custom event untuk script Anda
             window.dispatchEvent(new CustomEvent('authStateChanged', { detail: user }));
         });
 
         function loginAdmin() {
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPassword').value;
+            const remember = document.getElementById('rememberMe').checked;
+            
             if(!email || !pass) return showModal("Error", "Email & Password wajib diisi!", "alert");
-            auth.signInWithEmailAndPassword(email, pass).catch(err => showModal("Gagal", err.message, "alert"));
+            
+            // Konfigurasi Remember Me (Local = ingat terus, Session = hilang saat tab ditutup)
+            const persistenceType = remember 
+                ? firebase.auth.Auth.Persistence.LOCAL 
+                : firebase.auth.Auth.Persistence.SESSION;
+
+            auth.setPersistence(persistenceType)
+                .then(() => auth.signInWithEmailAndPassword(email, pass))
+                .catch(err => showModal("Gagal", err.message, "alert"));
         }
 
         function logoutAdmin() {
@@ -242,18 +267,13 @@
             const statusWrap = document.getElementById('wrap-shopee-status');
             const modalTitle = document.getElementById('modal-shopee-title');
 
-            priceWrap.style.display = "block";
-            statusWrap.style.display = "block";
-            urlInput.style.height = "60px"; 
-            urlInput.style.textAlign = "left"; 
-            urlInput.placeholder = "URL Link";
+            priceWrap.style.display = "block"; statusWrap.style.display = "block";
+            urlInput.style.height = "60px"; urlInput.style.textAlign = "left"; urlInput.placeholder = "URL Link";
 
             if (key === 'ID_RANDOM_LOCKED') {
                 modalTitle.innerText = "Edit Daftar Link Acak";
-                priceWrap.style.display = "none";
-                statusWrap.style.display = "none";
-                urlInput.style.height = "250px"; 
-                urlInput.placeholder = "Masukkan link bersusun kebawah..."; 
+                priceWrap.style.display = "none"; statusWrap.style.display = "none";
+                urlInput.style.height = "250px"; urlInput.placeholder = "Masukkan link bersusun kebawah..."; 
             } else {
                 modalTitle.innerText = key ? "Edit Link Shopee" : "Tambah Link Shopee";
             }
@@ -280,11 +300,16 @@
             const s = document.getElementById('shopee-status').value;
             
             if(t && u) {
-                const data = { title: t, url: u, price: p, status: s };
+                // Menambahkan stamp waktu (updatedAt) untuk fitur sorting
+                const data = { 
+                    title: t, url: u, price: p, status: s, 
+                    updatedAt: Date.now() 
+                };
+                
                 if (key) {
                     db.ref('linkshopee/'+key).update(data).then(() => closeModal('modal-shopee-form'));
                 } else {
-                    data.createdAt = new Date().toISOString(); // Tambahan untuk urutan sorting
+                    data.createdAt = new Date().toISOString();
                     db.ref('linkshopee').push(data).then(() => closeModal('modal-shopee-form'));
                 }
             } else {
@@ -338,12 +363,21 @@
                 container.appendChild(wrapRandom);
             }
 
-            // --- 2. LINK REGULER (Desain Minimalis Putih) ---
+            // --- 2. LINK REGULER (Sorting Berdasarkan Edit/Tambah Terakhir) ---
             let orderedShopee = Object.keys(shopeeDataCache)
                 .filter(k => k !== 'ID_RANDOM_LOCKED')
                 .map(k => ({ key: k, ...shopeeDataCache[k] }));
                 
-            orderedShopee.sort((a, b) => b.key.localeCompare(a.key));
+            // Logika Sorting
+            orderedShopee.sort((a, b) => {
+                const timeA = a.updatedAt || (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+                const timeB = b.updatedAt || (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+                
+                if (timeA !== timeB) {
+                    return timeB - timeA; // Urutan menurun (terbaru di atas)
+                }
+                return b.key.localeCompare(a.key); // Fallback ke kunci database
+            });
 
             orderedShopee.forEach((data) => {
                 const wrapper = document.createElement('div');
@@ -373,6 +407,7 @@
             });
         }
 
+        // Script Salin & Acak Profil
         function copyShopeeLink(event, url, btnElement) {
             event.preventDefault(); event.stopPropagation();
             navigator.clipboard.writeText(url).then(() => {
@@ -380,7 +415,6 @@
                 btnElement.innerHTML = '<i class="fa-solid fa-check" style="color:var(--fb-green);"></i>';
                 setTimeout(() => { btnElement.innerHTML = originalIcon; }, 1500);
             }).catch(() => {
-                // Fallback jika tidak support clipboard API
                 const ta = document.createElement("textarea"); ta.value = url;
                 document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
                 const originalIcon = btnElement.innerHTML; 
@@ -391,15 +425,11 @@
 
         function actionRandomLink(event, key, action = 'open', btnElement = null) {
             event.preventDefault(); event.stopPropagation();
-            
             let cardData = shopeeDataCache[key];
             if(!cardData || !cardData.url) return;
 
             let links = cardData.url.split('\n').map(l => l.trim()).filter(l => l.startsWith('http'));
-
-            if(links.length === 0) {
-                return showModal("Peringatan", "Belum ada link valid yang dimasukkan.", "alert");
-            }
+            if(links.length === 0) return showModal("Peringatan", "Belum ada link valid yang dimasukkan.", "alert");
 
             let randomLink = links[Math.floor(Math.random() * links.length)];
 
@@ -415,35 +445,22 @@
                     btnElement.innerHTML = '<i class="fa-solid fa-check" style="color:var(--fb-green);"></i>';
                     setTimeout(() => { btnElement.innerHTML = originalIcon; }, 1500);
                 });
-            } else {
-                window.open(randomLink, '_blank');
-            }
+            } else window.open(randomLink, '_blank');
         }
 
-        // ==========================================
-        // LOGIKA ACAK DATA PROFIL (Dipertahankan)
-        // ==========================================
         let firebaseUsedNames = [];
         const wibDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Jakarta"}));
         const todayWIB = `${wibDate.getFullYear()}-${String(wibDate.getMonth() + 1).padStart(2, '0')}-${String(wibDate.getDate()).padStart(2, '0')}`;
 
         db.ref('used_names').once('value', (snap) => {
-            if (snap.exists()) {
-                snap.forEach((childSnap) => {
-                    if (childSnap.key !== todayWIB) { db.ref('used_names/' + childSnap.key).remove(); }
-                });
-            }
+            if (snap.exists()) snap.forEach((childSnap) => { if (childSnap.key !== todayWIB) db.ref('used_names/' + childSnap.key).remove(); });
         });
-
-        db.ref('used_names/' + todayWIB).on('value', (snap) => {
-            firebaseUsedNames = snap.val() ? Object.values(snap.val()) : [];
-        });
+        db.ref('used_names/' + todayWIB).on('value', (snap) => { firebaseUsedNames = snap.val() ? Object.values(snap.val()) : []; });
 
         async function generateAndCopyData() {
             try {
                 if(!window.faker) return alert("Sistem sedang dimuat...");
                 window.faker.locale = "id_ID";
-
                 let nama = ""; let batasMaksimal = 0; 
                 do { nama = window.faker.name.findName(); batasMaksimal++; } while (firebaseUsedNames.includes(nama) && batasMaksimal < 150);
                 db.ref('used_names/' + todayWIB).push(nama);
@@ -459,28 +476,21 @@
                     { prov: "JAWA TIMUR", zip: "6", weight: 35, kota: ["SURABAYA", "MALANG", "SIDOARJO", "GRESIK", "JEMBER"] }
                 ];
 
-                let totalWeight = daerah.reduce((sum, item) => sum + item.weight, 0);
-                let randomNum = Math.random() * totalWeight; let pilihDaerah = daerah[0];
+                let totalWeight = daerah.reduce((sum, item) => sum + item.weight, 0); let randomNum = Math.random() * totalWeight; let pilihDaerah = daerah[0];
                 for (let d of daerah) { if (randomNum < d.weight) { pilihDaerah = d; break; } randomNum -= d.weight; }
-
                 const kota = pilihDaerah.kota[Math.floor(Math.random() * pilihDaerah.kota.length)];
                 const kodePos = `${pilihDaerah.zip}${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
                 const jalan = `JL. CONTOH NO. ${Math.floor(Math.random() * 200) + 1}`;
-                const hasilLengkap = `${nama}, ${noHp}, ${pilihDaerah.prov}, ${kota}, ${kodePos}, ${jalan}`;
                 
+                const hasilLengkap = `${nama}, ${noHp}, ${pilihDaerah.prov}, ${kota}, ${kodePos}, ${jalan}`;
                 document.getElementById('generatedDataOutput').value = hasilLengkap;
                 
-                // Copy logic
                 const ta = document.createElement("textarea"); ta.value = hasilLengkap;
                 document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
 
                 const btn = document.getElementById('btn-generate');
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
-                btn.style.background = 'var(--fb-green)';
-                setTimeout(() => { 
-                    btn.innerHTML = '<i class="fa-solid fa-shuffle"></i> Acak Data'; 
-                    btn.style.background = '';
-                }, 1500);
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!'; btn.style.background = 'var(--fb-green)';
+                setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-shuffle"></i> Acak Data'; btn.style.background = ''; }, 1500);
             } catch (err) { console.error(err); }
         }
     </script>
