@@ -158,11 +158,16 @@
                 projectId: "sms-xurel",
                 storageBucket: "sms-xurel.firebasestorage.app"
             },
+            // ===============================================
+            // PENGATURAN FOLDER FIREBASE (AKHIRI DENGAN "/")
+            // Kosongkan "" jika tidak ingin pakai sub-folder
+            // ===============================================
+            ROOT_FOLDER: "linkshopee/", 
+            
             JSON_URL: "./kota.json", 
             HP_PREFIX: ['0811','0812','0813','0821','0822','0852','0815','0816','0857','0858','0817','0818','0819','0859','0877','0878','0895','0896','0897','0898'],
             BIG_CITIES: ["JAKARTA", "SURABAYA", "BANDUNG", "MEDAN", "SEMARANG", "MAKASSAR", "PALEMBANG", "DENPASAR", "BOGOR", "DEPOK", "TANGERANG", "BEKASI", "SIDOARJO", "MALANG", "SURAKARTA", "YOGYAKARTA"],
             HEROES: ["Soekarno", "Hatta", "Sudirman", "Diponegoro", "Pattimura", "Imam Bonjol", "Teuku Umar", "Cut Nyak Dien", "Kartini", "Ki Hajar Dewantara", "Ahmad Yani", "Bung Tomo", "Sisingamangaraja", "Hasanuddin", "Antasari", "Agus Salim", "Hayam Wuruk", "Gajah Mada", "Raden Fatah", "Mulawarman", "Purnawarman", "Hasyim Asyari", "Wahid Hasyim", "Ahmad Dahlan", "Samanhudi", "Nuku", "Sultan Ageng Tirtayasa", "Sultan Syahrir", "Tan Malaka", "Mohammad Natsir", "Tjokroaminoto", "Sam Ratulangi", "Soetomo", "Cipto Mangunkusumo", "Dewi Sartika", "Nyi Ageng Serang", "Rasuna Said", "Fatmawati", "Yos Sudarso", "R.E. Martadinata", "Suprapto", "M.T. Haryono", "S. Parman", "D.I. Panjaitan", "Sutoyo Siswomiharjo", "Pierre Tendean", "Katamso", "Halim Perdanakusuma", "Iswahyudi", "Abdul Muis", "Ir. Juanda", "Slamet Riyadi", "Urip Sumohardjo", "Teuku Cik Ditiro", "Mahmud Badaruddin", "Raden Intan", "Sultan Thaha", "Iskandar Muda", "Teuku Nyak Arif", "Frans Kaisiepo", "Silas Papare", "Marthen Indey", "Johannes Dimara", "Opo Daeng Risaju", "Maria Walanda Maramis", "W.R. Supratman", "Ismail Marzuki", "Chairil Anwar", "Raden Saleh", "Affandi", "Zainal Mustofa", "Mas Mansyur", "Tirtayasa", "Nuruddin Ar-Raniry", "Hamzah Fansuri", "Syaikh Abdurrauf", "Syaikh Yusuf", "Syaikh Nawawi", "Ranggawarsita", "Suriyadi", "Dirgantara", "Soepeno", "Sutomo", "Suharto", "Gatot Subroto", "Veteran", "Pemuda", "Perintis Kemerdekaan", "Bahari", "Angkasa", "Bumi", "Nusantara"],
-            // 100 Daftar Patokan Realistis
             PATOKAN: [
                 "Dekat Pos Kamling", "Pagar Hitam", "Cat Putih Pagar Hijau", "Depan Masjid", "Samping Indomaret", 
                 "Sebelah Warung Madura", "Depan SD", "Samping Bengkel Motor", "Ada Pohon Mangga di depan", "Pagar Biru", 
@@ -282,6 +287,8 @@
         function setThemeIcon(theme) {
             const icon = document.getElementById('theme-toggle');
             icon.innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun" style="color:#f59e0b;"></i>' : '<i class="fa-solid fa-moon"></i>';
+            // Hindari conflict warna bawaan nav-icon
+            icon.style.color = theme === 'dark' ? '#f59e0b' : 'var(--text-gray)'; 
         }
 
         window.addEventListener('DOMContentLoaded', () => { setThemeIcon(savedTheme); });
@@ -313,13 +320,15 @@
             renderCards(); 
         });
 
-        db.ref('linkshopee').on('value', snap => { 
+        // Menerapkan ROOT_FOLDER untuk Data Utama
+        db.ref(CONFIG.ROOT_FOLDER + 'linkshopee').on('value', snap => { 
             dbShopee = snap.val() || {}; 
             renderCards(); 
         });
 
+        // Menerapkan ROOT_FOLDER untuk Riwayat Nama
         const TWELVE_HOURS = 12 * 60 * 60 * 1000;
-        db.ref('used_names').on('value', snap => {
+        db.ref(CONFIG.ROOT_FOLDER + 'used_names').on('value', snap => {
             dbNames = [];
             const now = Date.now();
             let updates = {};
@@ -335,7 +344,7 @@
                         dbNames.push(data.name);
                     }
                 });
-                if(needsCleanup) db.ref('used_names').update(updates);
+                if(needsCleanup) db.ref(CONFIG.ROOT_FOLDER + 'used_names').update(updates);
             }
         });
 
@@ -427,7 +436,8 @@
                 } while(dbNames.includes(namaRaw) && loop < 50);
             }
             
-            db.ref('used_names').push({ name: namaRaw, timestamp: Date.now() });
+            // Simpan nama acak ke ROOT_FOLDER
+            db.ref(CONFIG.ROOT_FOLDER + 'used_names').push({ name: namaRaw, timestamp: Date.now() });
 
             const prx = CONFIG.HP_PREFIX[Math.floor(Math.random() * CONFIG.HP_PREFIX.length)];
             const hp = prx + Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
@@ -460,7 +470,6 @@
             const prov = toTitleCase(dataW.provinsi || "");
             const kota = toTitleCase(dataW.kota || "").replace(/,\s*Kabupaten/gi, "").replace(/Kota Adm\.\s*/gi, "").replace(/Kota\s+/gi, "").replace(/Kabupaten\s+/gi, "Kab. ");
             const kec = toTitleCase(dataW.kecamatan || "");
-            // Gabungkan patokan ke nama jalan
             const jalan = toTitleCase(jalanRaw).replace(/Jl\./gi, "Jl.").replace(/No\./gi, "No.") + patokan; 
 
             const hasil = `${nama}, ${hp}, ${prov}, ${kota}, ${dataW.kodepos || "60111"}, ${jalan}, Kec. ${kec}`;
@@ -617,13 +626,16 @@
                 updatedAt: Date.now()
             };
             if(!data.title || !data.url) return customAlert("Gagal", "Judul dan URL wajib diisi!", "danger");
-            if(key) db.ref('linkshopee/'+key).update(data);
-            else { data.createdAt = Date.now(); db.ref('linkshopee').push(data); }
+            
+            // Simpan ke ROOT_FOLDER
+            if(key) db.ref(CONFIG.ROOT_FOLDER + 'linkshopee/'+key).update(data);
+            else { data.createdAt = Date.now(); db.ref(CONFIG.ROOT_FOLDER + 'linkshopee').push(data); }
             closeModal('modal-form');
         }
 
         function saveRandomCard() {
-            db.ref('linkshopee/ID_RANDOM_LOCKED').set({
+            // Simpan ke ROOT_FOLDER
+            db.ref(CONFIG.ROOT_FOLDER + 'linkshopee/ID_RANDOM_LOCKED').set({
                 title: document.getElementById('random-name').value,
                 url: document.getElementById('random-url').value,
                 updatedAt: Date.now()
@@ -644,12 +656,14 @@
         }
 
         function togglePin(key, isPinned) { 
-            db.ref('linkshopee/'+key).update({ pinnedAt: isPinned ? null : Date.now() }); 
+            // Update Pin di ROOT_FOLDER
+            db.ref(CONFIG.ROOT_FOLDER + 'linkshopee/'+key).update({ pinnedAt: isPinned ? null : Date.now() }); 
         }
 
         async function deleteCard(key) { 
             const confirm = await customAlert("Hapus Kartu", "Yakin ingin menghapus link ini secara permanen?", "confirm");
-            if(confirm) db.ref('linkshopee/'+key).remove(); 
+            // Hapus dari ROOT_FOLDER
+            if(confirm) db.ref(CONFIG.ROOT_FOLDER + 'linkshopee/'+key).remove(); 
         }
 
         // ==========================================
