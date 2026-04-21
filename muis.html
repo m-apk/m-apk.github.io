@@ -321,7 +321,7 @@
         });
 
         // Menerapkan ROOT_FOLDER untuk Data Utama
-        db.ref(CONFIG.ROOT_FOLDER + 'linkshopee').on('value', snap => { 
+        db.ref(CONFIG.ROOT_FOLDER + 'muis').on('value', snap => { 
             dbShopee = snap.val() || {}; 
             renderCards(); 
         });
@@ -628,14 +628,14 @@
             if(!data.title || !data.url) return customAlert("Gagal", "Judul dan URL wajib diisi!", "danger");
             
             // Simpan ke ROOT_FOLDER
-            if(key) db.ref(CONFIG.ROOT_FOLDER + 'linkshopee/'+key).update(data);
-            else { data.createdAt = Date.now(); db.ref(CONFIG.ROOT_FOLDER + 'linkshopee').push(data); }
+            if(key) db.ref(CONFIG.ROOT_FOLDER + 'muis/'+key).update(data);
+            else { data.createdAt = Date.now(); db.ref(CONFIG.ROOT_FOLDER + 'muis').push(data); }
             closeModal('modal-form');
         }
 
         function saveRandomCard() {
             // Simpan ke ROOT_FOLDER
-            db.ref(CONFIG.ROOT_FOLDER + 'linkshopee/ID_RANDOM_LOCKED').set({
+            db.ref(CONFIG.ROOT_FOLDER + 'muis/ID_RANDOM_LOCKED').set({
                 title: document.getElementById('random-name').value,
                 url: document.getElementById('random-url').value,
                 updatedAt: Date.now()
@@ -657,13 +657,13 @@
 
         function togglePin(key, isPinned) { 
             // Update Pin di ROOT_FOLDER
-            db.ref(CONFIG.ROOT_FOLDER + 'linkshopee/'+key).update({ pinnedAt: isPinned ? null : Date.now() }); 
+            db.ref(CONFIG.ROOT_FOLDER + 'muis/'+key).update({ pinnedAt: isPinned ? null : Date.now() }); 
         }
 
         async function deleteCard(key) { 
             const confirm = await customAlert("Hapus Kartu", "Yakin ingin menghapus link ini secara permanen?", "confirm");
             // Hapus dari ROOT_FOLDER
-            if(confirm) db.ref(CONFIG.ROOT_FOLDER + 'linkshopee/'+key).remove(); 
+            if(confirm) db.ref(CONFIG.ROOT_FOLDER + 'muis/'+key).remove(); 
         }
 
         // ==========================================
