@@ -107,10 +107,9 @@
         <div class="header-section">
             <div class="section-title">LINK SHOPEE</div>
             <input type="text" id="generatedDataOutput" class="input-generator" placeholder="Data akan muncul di sini..." readonly>
-            <button id="btn-generate" class="btn-acak" onclick="generateRandomData()">
-    <i class="fa-solid fa-shuffle"></i> Acak Data
+            <button id="btn-generate" class="btn-acak" onclick="generateAndCopyData()">
+                <i class="fa-solid fa-shuffle"></i> Acak Data
             </button>
-
         </div>
 
         <div id="shopee-container" style="display: flex; flex-direction: column;"></div>
@@ -373,288 +372,104 @@
             } else window.open(randomLink, '_blank');
         }
 
-// ==========================================
-// 1. LOAD DATA KODEPOS (DARI ADDRES.JS)
-// ==========================================
-let dataKodepos = null;
+        // ==========================================
+        // 3. LOGIKA PENJEMPUTAN DATA EWWINK & ACAK REALISTIS
+        // ==========================================
+        let dbProvinsi = {}; let dbKota = {}; let dbKodepos = [];
 
-fetch('https://m-apk.github.io/addres.json')
-    .then(response => response.json())
-    .then(data => {
-        dataKodepos = data;
-        console.log("Data kodepos berhasil dimuat!");
-    })
-    .catch(err => {
-        console.error("Gagal memuat addres.js", err);
-    });
-
-// ==========================================
-// 2. FUNGSI LOGIKA DATA GENERATOR
-// ==========================================
-function getRandomKey(obj) {
-    const keys = Object.keys(obj);
-    return keys[Math.floor(Math.random() * keys.length)];
-}
-
-function toTitleCase(str) {
-    return str.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
-}
-
-function generatePhoneNumber() {
-    const prefixes = [
-        "0811","0812","0813","0821","0822","0823","0851","0852","0853", // Telkomsel
-        "0814","0815","0816","0855","0856","0857","0858",             // Indosat
-        "0817","0818","0819","0859","0877","0878",                    // XL
-        "0831","0832","0833","0838",                                  // Axis
-        "0895","0896","0897","0898","0899",                           // Tri
-        "0881","0882","0883","0884","0885","0886","0887","0888","0889" // Smartfren
-    ];
-    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-    const sisaDigit = Math.random() < 0.5 ? 8 : 9; 
-    
-    let nomorStr = prefix;
-    for (let j = 0; j < sisaDigit; j++) {
-        nomorStr += Math.floor(Math.random() * 10).toString();
-    }
-    return nomorStr;
-}
-
-function createSingleData() {
-    if(typeof faker !== 'undefined') faker.locale = "id_ID";
-
-    let namaProvinsiAsli = "";
-    
-    // Logika pemilihan provinsi
-    while (true) {
-        namaProvinsiAsli = getRandomKey(dataKodepos);
-        if (!namaProvinsiAsli.toLowerCase().includes('papua')) {
-            break;
-        }
-    }
-
-    const namaKotaAsli = getRandomKey(dataKodepos[namaProvinsiAsli]);
-    const namaKecamatan = getRandomKey(dataKodepos[namaProvinsiAsli][namaKotaAsli]);
-    const namaKelurahan = getRandomKey(dataKodepos[namaProvinsiAsli][namaKotaAsli][namaKecamatan]);
-    const kodePos = dataKodepos[namaProvinsiAsli][namaKotaAsli][namaKecamatan][namaKelurahan];
-
-    // Rapikan Ejaan Baku (Title Case)
-    const provinsiText = toTitleCase(namaProvinsiAsli); 
-    const kotaText = toTitleCase(namaKotaAsli.split(",")[0].trim()); 
-    const kelurahanText = toTitleCase(namaKelurahan);
-
-    // Generate Nama (Firstname dan Lastname) & HP
-    const namaLengkap = faker.name.firstName() + " " + faker.name.lastName();
-    const nomorHP = generatePhoneNumber();
-
-    // Format Akhir
-    return `${namaLengkap}, ${nomorHP}, ${provinsiText}, ${kotaText}, ${kodePos}, Desa/Kel. ${kelurahanText}`;
-}
-
-// ==========================================
-// 3. FUNGSI UTAMA (DIHUBUNGKAN KE TOMBOL LAMA)
-// ==========================================
-async function generateRandomData() {
-    if (!dataKodepos) {
-        alert("Data wilayah belum selesai dimuat. Silakan tunggu beberapa detik.");
-        return;
-    }
-
-    // Mengambil elemen dari UI Anda yang sudah ada
-    const btn = document.getElementById('btn-generate');
-    const outputField = document.getElementById('generatedDataOutput');
-    const originalHtml = btn.innerHTML;
-    
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> MEMPROSES...';
-    btn.disabled = true;
-
-    try {
-        // Referensi Firebase (Pastikan Firebase sudah diinisialisasi di file Anda)
-        const dbRef = db.ref('riwayat_data');
-        let isUnique = false;
-        let finalData = "";
-        let attempts = 0;
-
-        // Cek Keunikan 24 Jam di Firebase
-        while (!isUnique && attempts < 5) {
-            finalData = createSingleData();
-            attempts++;
-
-            const snapshot = await dbRef.orderByChild('teks_data').equalTo(finalData).once('value');
-            
-            if (snapshot.exists()) {
-                let adaDuplikatBaru = false;
-                const waktuSekarang = Date.now();
-                
-                snapshot.forEach(child => {
-                    const selisihWaktu = waktuSekarang - child.val().timestamp;
-// ==========================================
-// 1. LOAD DATA KODEPOS (DARI ADDRES.JSON)
-// ==========================================
-let dataKodepos = null;
-
-// Menggunakan .json sesuai file yang kamu berikan
-fetch('https://m-apk.github.io/addres.json')
-    .then(response => {
-        if (!response.ok) throw new Error("Gagal mengambil file JSON");
-        return response.json();
-    })
-    .then(data => {
-        dataKodepos = data;
-        console.log("Data wilayah berhasil dimuat!");
-    })
-    .catch(err => {
-        console.error("Error:", err);
-        alert("Gagal memuat data wilayah: " + err.message);
-    });
-
-// ==========================================
-// 2. FUNGSI LOGIKA DATA GENERATOR
-// ==========================================
-function getRandomKey(obj) {
-    const keys = Object.keys(obj);
-    return keys[Math.floor(Math.random() * keys.length)];
-}
-
-function toTitleCase(str) {
-    return str.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
-}
-
-function generatePhoneNumber() {
-    const prefixes = [
-        "0811","0812","0813","0821","0822","0823","0851","0852","0853",
-        "0814","0815","0816","0855","0856","0857","0858",
-        "0817","0818","0819","0859","0877","0878",
-        "0831","0832","0833","0838",
-        "0895","0896","0897","0898","0899",
-        "0881","0882","0883","0884","0885","0886","0887","0888","0889"
-    ];
-    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-    const sisaDigit = Math.random() < 0.5 ? 8 : 9; 
-    
-    let nomorStr = prefix;
-    for (let j = 0; j < sisaDigit; j++) {
-        nomorStr += Math.floor(Math.random() * 10).toString();
-    }
-    return nomorStr;
-}
-
-function createSingleData() {
-    if(typeof faker !== 'undefined') faker.locale = "id_ID";
-
-    let namaProvinsiAsli = "";
-    
-    // Daftar Provinsi Kota Besar (Jawa, Bali, Sumatra) untuk prioritas 50%
-    const provinsiPrioritas = [
-        "DKI JAKARTA", "JAWA BARAT", "JAWA TENGAH", "JAWA TIMUR", 
-        "BANTEN", "DAERAH ISTIMEWA YOGYAKARTA", "BALI", 
-        "SUMATERA UTARA", "SUMATERA BARAT", "SUMATERA SELATAN"
-    ];
-
-    // Logika Pemilihan Wilayah
-    while (true) {
-        // Peluang 50% mengambil dari provinsi prioritas
-        if (Math.random() < 0.5) {
-            namaProvinsiAsli = provinsiPrioritas[Math.floor(Math.random() * provinsiPrioritas.length)];
-        } else {
-            namaProvinsiAsli = getRandomKey(dataKodepos);
-        }
-
-        // Filter: Abaikan Papua sesuai instruksi
-        if (!namaProvinsiAsli.toLowerCase().includes('papua') && dataKodepos[namaProvinsiAsli]) {
-            break;
-        }
-    }
-
-    const namaKotaAsli = getRandomKey(dataKodepos[namaProvinsiAsli]);
-    const namaKecamatan = getRandomKey(dataKodepos[namaProvinsiAsli][namaKotaAsli]);
-    const namaKelurahan = getRandomKey(dataKodepos[namaProvinsiAsli][namaKotaAsli][namaKecamatan]);
-    const kodePos = dataKodepos[namaProvinsiAsli][namaKotaAsli][namaKecamatan][namaKelurahan];
-
-    const provinsiText = toTitleCase(namaProvinsiAsli); 
-    const kotaText = toTitleCase(namaKotaAsli.split(",")[0].trim()); 
-    const kelurahanText = toTitleCase(namaKelurahan);
-
-    // Nama hanya Firstname & Lastname (Abaikan domain/suffix)
-    const namaLengkap = faker.name.firstName() + " " + faker.name.lastName();
-    const nomorHP = generatePhoneNumber();
-
-    return `${namaLengkap}, ${nomorHP}, ${provinsiText}, ${kotaText}, ${kodePos}, Desa/Kel. ${kelurahanText}`;
-}
-
-// ==========================================
-// 3. FUNGSI UTAMA
-// ==========================================
-async function generateRandomData() {
-    if (!dataKodepos) {
-        alert("Data wilayah belum selesai dimuat. Silakan tunggu beberapa detik.");
-        return;
-    }
-
-    const btn = document.getElementById('btn-generate');
-    const outputField = document.getElementById('generatedDataOutput');
-    const originalHtml = btn.innerHTML;
-    
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> MEMPROSES...';
-    btn.disabled = true;
-
-    try {
-        // Simpan di folder 'muis' sesuai instruksi konsolidasi folder Firebase kamu
-        const dbRef = db.ref('muis/riwayat_data');
-        let isUnique = false;
-        let finalData = "";
-        let attempts = 0;
-
-        while (!isUnique && attempts < 5) {
-            finalData = createSingleData();
-            attempts++;
-
-            const snapshot = await dbRef.orderByChild('teks_data').equalTo(finalData).once('value');
-            
-            if (snapshot.exists()) {
-                let adaDuplikatBaru = false;
-                const waktuSekarang = Date.now();
-                
-                snapshot.forEach(child => {
-                    const selisihWaktu = waktuSekarang - child.val().timestamp;
-                    if (selisihWaktu < 86400000) { // Cek duplikat dalam 24 jam
-                        adaDuplikatBaru = true;
-                    }
-                });
-                
-                if (!adaDuplikatBaru) isUnique = true;
-            } else {
-                isUnique = true; 
-            }
-        }
-
-        if (!isUnique) throw new Error("Gagal mencari kombinasi data unik.");
-
-        await dbRef.push({
-            teks_data: finalData,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
+        Promise.all([
+            fetch('https://raw.githubusercontent.com/ewwink/kode-pos-indonesia/main/provinsi.json').then(r => r.json()),
+            fetch('https://raw.githubusercontent.com/ewwink/kode-pos-indonesia/main/kota-kabupaten.json').then(r => r.json()),
+            fetch('https://raw.githubusercontent.com/ewwink/kode-pos-indonesia/main/kodepos.json').then(r => r.json())
+        ])
+        .then(([provData, kotaData, kodeposData]) => {
+            dbProvinsi = provData; dbKota = kotaData;
+            dbKodepos = Object.keys(kodeposData).map(kode => ({
+                kodepos: kode, bps: kodeposData[kode].bps, kecamatan: kodeposData[kode].nama
+            }));
+        })
+        .catch(err => {
+            console.error("Gagal load API ewwink:", err);
+            dbKodepos = [{ kodepos: "60111", bps: "3578", kecamatan: "KREMBANGAN" }];
+            dbProvinsi = { "35": "JAWA TIMUR" }; dbKota = { "3578": "KOTA SURABAYA" };
         });
 
-        outputField.value = finalData;
-        outputField.select();
-        document.execCommand('copy');
-        window.getSelection().removeAllRanges();
+        let firebaseUsedNames = [];
+        const wibDate = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Jakarta"}));
+        const todayWIB = `${wibDate.getFullYear()}-${String(wibDate.getMonth() + 1).padStart(2, '0')}-${String(wibDate.getDate()).padStart(2, '0')}`;
 
-        btn.innerHTML = '<i class="fa-solid fa-check"></i> TERSALIN!'; 
-        btn.style.background = '#31a24c';
-        
-        setTimeout(() => { 
-            btn.innerHTML = originalHtml; 
-            btn.style.background = ''; 
-            btn.disabled = false;
-        }, 2000);
+        db.ref('used_names').once('value', (snap) => {
+            if (snap.exists()) snap.forEach((childSnap) => { if (childSnap.key !== todayWIB) db.ref('used_names/' + childSnap.key).remove(); });
+        });
+        db.ref('used_names/' + todayWIB).on('value', (snap) => { firebaseUsedNames = snap.val() ? Object.values(snap.val()) : []; });
 
-    } catch (error) {
-        console.error("Terjadi error:", error);
-        alert("Terjadi kesalahan sistem!");
-        btn.innerHTML = originalHtml;
-        btn.disabled = false;
-    }
-}
+        async function generateAndCopyData() {
+            try {
+                if(!window.faker) return alert("Sistem pengacak nama sedang dimuat...");
+                if(dbKodepos.length === 0) return alert("Database wilayah dari Github sedang didownload, tunggu beberapa detik...");
+                
+                window.faker.locale = "id_ID";
+
+                // 1. Acak Nama (Cek Duplikat Firebase)
+                let nama = ""; let batasMaksimal = 0; 
+                do { nama = window.faker.name.findName(); batasMaksimal++; } 
+                while (firebaseUsedNames.includes(nama) && batasMaksimal < 150);
+                db.ref('used_names/' + todayWIB).push(nama);
+
+                // 2. Acak No HP Realistis (Prefix Valid Indonesia)
+                const prefixProvider = ['0811', '0812', '0813', '0821', '0822', '0852', '0815', '0816', '0857', '0858', '0817', '0818', '0819', '0859', '0877', '0878', '0895', '0896', '0897', '0898'];
+                const prefix = prefixProvider[Math.floor(Math.random() * prefixProvider.length)];
+                const noHp = prefix + Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+                
+                // 3. TIERING KOTA (Fuzzy Match Anti-Gagal)
+                const tier1 = ["JAKARTA SELATAN", "JAKARTA BARAT", "JAKARTA PUSAT", "JAKARTA TIMUR", "JAKARTA UTARA", "SURABAYA", "BANDUNG", "MEDAN", "SEMARANG", "MAKASSAR", "PALEMBANG", "DENPASAR"];
+                const tier2 = ["BOGOR", "DEPOK", "TANGERANG", "BEKASI", "SIDOARJO", "MALANG", "SURAKARTA", "YOGYAKARTA", "BALIKPAPAN", "PONTIANAK", "BANJARMASIN", "PEKANBARU", "BANDAR LAMPUNG", "BATAM", "PADANG"];
+                const tier3 = ["CIREBON", "MAGELANG", "KEDIRI", "MADIUN", "JEMBER", "BANYUWANGI", "KARAWANG", "SLEMAN", "BANTUL", "GRESIK", "MANADO", "MATARAM", "SAMARINDA"];
+
+                const probabilitas = Math.random();
+                let targetTier = tier3; // 20%
+                if (probabilitas < 0.50) { targetTier = tier1; }      // 50%
+                else if (probabilitas < 0.80) { targetTier = tier2; } // 30%
+
+                const selectedCity = targetTier[Math.floor(Math.random() * targetTier.length)];
+
+                // Menggunakan includes untuk mencocokkan sebagian kata (Fuzzy Match)
+                const validBpsCodes = Object.keys(dbKota).filter(k => dbKota[k].toUpperCase().includes(selectedCity));
+                const validKodeposData = dbKodepos.filter(item => validBpsCodes.includes(item.bps));
+
+                // Ekstraksi Data Spesifik
+                let posAcak = validKodeposData.length > 0 
+                    ? validKodeposData[Math.floor(Math.random() * validKodeposData.length)]
+                    : { kodepos: "60111", bps: "3578", kecamatan: "KREMBANGAN" };
+
+                const provCode = posAcak.bps.substring(0, 2);
+                const provinsi = (dbProvinsi[provCode] || "JAWA TIMUR").toUpperCase();
+                
+                // Sinkronkan nama kota langsung dari Database ewwink agar tepat
+                let kota = (dbKota[posAcak.bps] || selectedCity).toUpperCase();
+                kota = kota.replace("KOTA ADM. ", "").replace("KOTA ", "").replace("KABUPATEN ", "KAB. ");
+                
+                const kodePosValid = posAcak.kodepos;
+                const kecamatan = posAcak.kecamatan.toUpperCase();
+
+                // 4. Meracik Alamat Jalan Realistis
+                const namaJalan = ["SUDIRMAN", "GATOT SUBROTO", "AHMAD YANI", "MERDEKA", "DIPONEGORO", "PAHLAWAN", "MELATI", "ANGGREK", "NUSA INDAH", "VETERAN", "HASANUDDIN", "KARTINI", "GAJAH MADA", "SUKARNO HATTA", "CEMARA"];
+                const jalan = `JL. ${namaJalan[Math.floor(Math.random() * namaJalan.length)]} NO. ${Math.floor(Math.random() * 200) + 1}`;
+                
+                // 5. Susunan Akhir
+                const hasilLengkap = `${nama}, ${noHp}, ${provinsi}, ${kota}, ${kodePosValid}, ${jalan}, KEC. ${kecamatan}`;
+                
+                document.getElementById('generatedDataOutput').value = hasilLengkap;
+                
+                const ta = document.createElement("textarea"); ta.value = hasilLengkap;
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+
+                const btn = document.getElementById('btn-generate');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> TERSALIN!'; btn.style.background = 'var(--fb-green)';
+                setTimeout(() => { btn.innerHTML = '<i class="fa-solid fa-shuffle"></i> ACAK DATA'; btn.style.background = ''; }, 1500);
+
+            } catch (err) { console.error(err); }
+        }
     </script>
 </body>
 </html>
