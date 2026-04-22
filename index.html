@@ -210,7 +210,7 @@
     <div class="container">
         <div class="generator-card">
             <div class="generator-bar">
-                <input type="text" id="output-data" class="gen-input" placeholder="Data acak akan muncul di sini..." readonly>
+                <input type="text" id="output-data" class="gen-input" placeholder="---" readonly>
                 <button id="btn-generate" class="gen-btn" onclick="generateData()">
                     <i class="fa-solid fa-shuffle"></i> Acak Data
                 </button>
@@ -228,7 +228,7 @@
             </div>
             <div class="form-group"><input type="email" id="log-email" class="form-input"></div>
             <div class="form-group"><input type="password" id="log-pass" class="form-input"></div>
-            <label class="check-wrap"><input type="checkbox" id="log-remember" checked> Ingat kredensial saya</label>
+            <label class="check-wrap"><input type="checkbox" id="log-remember" checked> Ingat saya</label>
             <button class="btn-submit" onclick="login()">Log In</button>
         </div>
     </div>
@@ -253,12 +253,12 @@
     <div id="modal-random-form" class="modal">
         <div class="modal-box">
             <div class="modal-header">
-                <div class="modal-title">Setup Link Acak</div>
+                <div class="modal-title">Link Acak</div>
                 <button class="nav-icon" onclick="closeModal('modal-random-form')" style="font-size:18px;"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="form-group"><label>Judul Kartu</label><input type="text" id="random-name" class="form-input" style="text-transform: uppercase;"></div>
-            <div class="form-group"><label>Daftar Link (Pisahkan dengan Enter)</label><textarea id="random-url" class="form-input" style="resize: vertical; height: 150px; font-size: 0.8em;"></textarea></div>
-            <button class="btn-submit" onclick="saveRandomCard()">Simpan Sistem Acak</button>
+            <div class="form-group"><label>Daftar Link</label><textarea id="random-url" class="form-input" style="resize: vertical; height: 150px; font-size: 0.8em;"></textarea></div>
+            <button class="btn-submit" onclick="saveRandomCard()">Simpan</button>
         </div>
     </div>
 
